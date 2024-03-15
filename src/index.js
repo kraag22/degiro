@@ -11,6 +11,18 @@ const {lcFirst} = require('./utils');
 const BASE_TRADER_URL = 'https://trader.degiro.nl';
 const MOCK_FIREFOX_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
 
+const fetchWithAgent = function(url, options) {
+    let newOptions = options || {}
+
+    if (newOptions.headers) {
+      newOptions.headers["User-Agent"] = MOCK_FIREFOX_AGENT;
+    } else {
+      newOptions.headers = {"User-Agent": MOCK_FIREFOX_AGENT}
+    }
+
+    return fetch(url, newOptions);
+};
+
 const create = ({
     username = process.env.DEGIRO_USER,
     password = process.env.DEGIRO_PASS,
@@ -52,7 +64,7 @@ const create = ({
     const getData = (options = {}) => {
         const params = querystring.stringify(options);
         log('getData', params);
-        return fetch(
+        return fetchWithAgent(
             `${urls.tradingUrl}v5/update/${session.account};jsessionid=${session.id}?${params}`
         ).then(res => res.json());
     };
@@ -84,7 +96,7 @@ const create = ({
      * @return {Promise}
      */
     const requestVwdSession = () => {
-        return fetch(
+        return fetchWithAgent(
             `https://degiro.quotecast.vwdservices.com/CORS/request_session?version=1.0.20170315&userToken=${
                 session.userToken
             }`,
@@ -150,14 +162,14 @@ const create = ({
                 return prices;
             };
 
-            return fetch(`https://degiro.quotecast.vwdservices.com/CORS/${vwdSession.sessionId}`, {
+            return fetchWithAgent(`https://degiro.quotecast.vwdservices.com/CORS/${vwdSession.sessionId}`, {
                 method: 'POST',
                 headers: {Origin: 'https://trader.degiro.nl'},
                 body: JSON.stringify({
                     controlData: `req(${issueId}.BidPrice);req(${issueId}.AskPrice);req(${issueId}.LastPrice);req(${issueId}.LastTime);`,
                 }),
             })
-                .then(() => fetch(`https://degiro.quotecast.vwdservices.com/CORS/${vwdSession.sessionId}`))
+                .then(() => fetchWithAgent(`https://degiro.quotecast.vwdservices.com/CORS/${vwdSession.sessionId}`))
                 .then(res => res.json())
                 .then(checkData);
         });
@@ -248,7 +260,7 @@ const create = ({
      * @return {Promise}
      */
     const getClientInfo = () =>
-        fetch(`${urls.paUrl}client?sessionId=${session.id}`)
+        fetchWithAgent(`${urls.paUrl}client?sessionId=${session.id}`)
             .then(res => res.json())
             .then(clientInfo => {
                 const data = clientInfo.data;
@@ -264,7 +276,7 @@ const create = ({
      * @return {Promise}
      */
     const updateConfig = () =>
-        fetch(`${BASE_TRADER_URL}/login/secure/config`, {
+        fetchWithAgent(`${BASE_TRADER_URL}/login/secure/config`, {
             headers: {
                 Cookie: `JSESSIONID=${session.id};`,
                 "User-Agent": MOCK_FIREFOX_AGENT
@@ -306,7 +318,7 @@ const create = ({
     };
 
     const sendLoginRequest = (url, params) => {
-        return fetch(url, {
+        return fetchWithAgent(url, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(params),
@@ -354,7 +366,7 @@ const create = ({
         };
         const params = querystring.stringify(omitBy(options, isNil));
         log('searchProduct', params);
-        return fetch(
+        return fetchWithAgent(
             `${urls.productSearchUrl}v5/products/lookup?intAccount=${session.account}&sessionId=${
                 session.id
             }&${params}`
@@ -368,7 +380,7 @@ const create = ({
      * @return {Promise} Resolves to {status: 0, statusText: "success"}
      */
     const deleteOrder = orderId => {
-        return fetch(
+        return fetchWithAgent(
             `${urls.tradingUrl}v5/order/${orderId};jsessionid=${session.id}?intAccount=${
                 session.account
             }&sessionId=${session.id}`,
@@ -411,7 +423,7 @@ const create = ({
             stopPrice,
         });
         log(session);
-        return fetch(
+        return fetchWithAgent(
             `${urls.tradingUrl}v5/checkOrder;jsessionid=${session.id}?intAccount=${
                 session.account
             }&sessionId=${session.id}`,
@@ -435,7 +447,7 @@ const create = ({
      */
     const confirmOrder = ({order, confirmationId}) => {
         log('confirmOrder', {order, confirmationId});
-        return fetch(
+        return fetchWithAgent(
             `${urls.tradingUrl}v5/order/${confirmationId};jsessionid=${session.id}?intAccount=${
                 session.account
             }&sessionId=${session.id}`,
@@ -473,7 +485,7 @@ const create = ({
         if (!Array.isArray(ids)) {
             ids = [ids];
         }
-        return fetch(
+        return fetchWithAgent(
             `${urls.productSearchUrl}v5/products/info?intAccount=${session.account}&sessionId=${session.id}`,
             {
                 method: 'POST',
