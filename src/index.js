@@ -9,6 +9,7 @@ const fromPairs = require('lodash/fromPairs');
 const {lcFirst} = require('./utils');
 
 const BASE_TRADER_URL = 'https://trader.degiro.nl';
+const MOCK_FIREFOX_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
 
 const create = ({
     username = process.env.DEGIRO_USER,
@@ -264,7 +265,10 @@ const create = ({
      */
     const updateConfig = () =>
         fetch(`${BASE_TRADER_URL}/login/secure/config`, {
-            headers: {Cookie: `JSESSIONID=${session.id};`},
+            headers: {
+                Cookie: `JSESSIONID=${session.id};`,
+                "User-Agent": MOCK_FIREFOX_AGENT
+            },
         })
             .then(res => res.json())
             .then(res => {
