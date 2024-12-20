@@ -30,6 +30,7 @@ const create = ({
     sessionId = process.env.DEGIRO_SID,
     account = +process.env.DEGIRO_ACCOUNT,
     debug = !!process.env.DEGIRO_DEBUG,
+    smsCode = process.env.SMS_CODE
 } = {}) => {
     const log = debug ? (...s) => console.log(...s) : () => {};
 
@@ -307,6 +308,12 @@ const create = ({
             isRedirectToMobile: false,
             queryParams: {reason: 'session_expired'},
         };
+
+        if (smsCode) {
+            url += '/sms';
+            loginParams.smsCode = smsCode;
+            loginParams.saveDevice = false;
+        }
 
         if (oneTimePassword) {
             log('2fa token', oneTimePassword);
