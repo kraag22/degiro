@@ -298,7 +298,7 @@ const create = ({
      *
      * @return {Promise} Resolves to {sessionId: string}
      */
-    const login = () => {
+    const login = (smsCode) => {
         log('login', username, '********');
         let url = `${BASE_TRADER_URL}/login/secure/login`;
         let loginParams = {
